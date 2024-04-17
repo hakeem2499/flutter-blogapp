@@ -8,14 +8,24 @@ class SearchSavedPost extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Search Posts'),
-      ),
-      body: 
-      SearchBar(
-             hintText: "search posts",
-             
+        appBar: AppBar(
+          title: const Text('Search Posts'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Enter your search query...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
+              ),
+            ],
           ),
-          );
+        ));
   }
 }

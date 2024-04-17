@@ -9,7 +9,6 @@ import 'package:flutterblogapp/views/PostDetailsPage.dart';
 import 'package:flutterblogapp/views/SavedPostPage.dart';
 import 'package:flutterblogapp/views/SearchPage.dart';
 import 'package:flutterblogapp/views/updatepost.dart';
-import 'package:intl/intl.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
