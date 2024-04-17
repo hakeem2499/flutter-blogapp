@@ -24,7 +24,7 @@ To run this Flutter app locally, follow these steps:
 1. Clone this repository to your local machine:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/hakeem2499/flutter-blogapp
 
 2. Navigate to the project directory(Run On the command line):
 cd flutter-blog-app

@@ -1,3 +1,4 @@
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -18,6 +19,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class MyHomePageState extends State<MyHomePage> {
+  Future<bool> checkConnectivity() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
+  }
+
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
@@ -82,11 +88,9 @@ class MyHomePageState extends State<MyHomePage> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             const DrawerHeader(
-              decoration: BoxDecoration(
-              ),
+              decoration: BoxDecoration(),
               child: Text(
                 'NewYorkTimes',
-                
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
@@ -113,7 +117,7 @@ class MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => UpdatePostPage(),
+                    builder: (context) => const UpdatePostPage(),
                   ),
                 );
               },
@@ -153,8 +157,8 @@ class MyHomePageState extends State<MyHomePage> {
           ),
           Expanded(
             child: Query(
-              options: QueryOptions(
-                document: gql('''
+                options: QueryOptions(
+                  document: gql('''
       query fetchAllBlogs {
           allBlogPosts {
             id
@@ -165,97 +169,121 @@ class MyHomePageState extends State<MyHomePage> {
           }
         }
     '''),
-              ),
-              builder: (QueryResult result, {refetch, fetchMore}) {
-                if (result.hasException) {
-                  return Text('Error: ${result.exception.toString()}');
-                }
+                ),
+                builder: (QueryResult result, {refetch, fetchMore}) {
+                  if (result.hasException) {
+                    return Text('Error: ${result.exception.toString()}');
+                  }
 
-                if (result.isLoading) {
-                  return const CircularProgressIndicator();
-                }
-
-                final blogPost = result.data?['allBlogPosts'] as List<dynamic>;
-
-                return Stack(
-                  alignment: AlignmentDirectional.topStart,
-                  children: <Widget>[
-                    ListView.builder(
-                      itemCount: blogPost.length,
-                      itemBuilder: (context, index) {
-                        final post = blogPost[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    PostDetailsPage(post['id']),
-                              ),
-                            );
-                          },
-                          child: SizedBox(
-                            height: 250,
-                            child: Card(
-                              margin: const EdgeInsets.all(10),
-                              child: Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      post['title'],
-                                      style: const TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Expanded(
-                                      child: Text(
-                                        post['body'],
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      'Date Created: ${post['dateCreated']}',
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  PostDetailsPage(post['id']),
-                                            ),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.black,
-                                        ),
-                                        child: const Text(
-                                          'Read More',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+                  if (result.isLoading) {
+                    return const CircularProgressIndicator();
+                  }
+                  return FutureBuilder<bool>(
+                    future: checkConnectivity(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else if (!snapshot.data!) {
+                        // Handle no internet connectivity
+                        return const Center(
+                          child: Text(
+                              'No internet connection. Please check your connection and try again.'),
                         );
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
+                      } else {
+                        final blogPost =
+                            result.data?['allBlogPosts'] as List<dynamic>;
+                        // If internet connection is available, proceed with rendering data
+
+                        return Stack(
+                          alignment: AlignmentDirectional.topStart,
+                          children: <Widget>[
+                            ListView.builder(
+                              itemCount: blogPost.length,
+                              itemBuilder: (context, index) {
+                                final post = blogPost[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            PostDetailsPage(post['id']),
+                                      ),
+                                    );
+                                  },
+                                  child: SizedBox(
+                                    height: 250,
+                                    child: Card(
+                                      margin: const EdgeInsets.all(10),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(10),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              post['title'],
+                                              style: const TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Expanded(
+                                              child: Text(
+                                                post['body'],
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              'Date Created: ${post['dateCreated']}',
+                                              style:
+                                                  const TextStyle(fontSize: 12),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: ElevatedButton(
+                                                onPressed: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          PostDetailsPage(
+                                                              post['id']),
+                                                    ),
+                                                  );
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.black,
+                                                ),
+                                                child: const Text(
+                                                  'Read More',
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      }
+                    },
+                    
+                  );
+                
+                }
+                ),
           )
         ],
       ),
@@ -279,8 +307,8 @@ class MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
               onPressed: () {
                 Navigator.push(
                   context,
